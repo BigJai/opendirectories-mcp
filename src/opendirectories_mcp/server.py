@@ -17,26 +17,42 @@ from mcp.server.fastmcp import FastMCP
 
 # --- Server port ---
 _IS_APIFY = os.environ.get('APIFY_META_ORIGIN') == 'STANDBY'
-PORT = int(os.environ.get('ACTOR_STANDBY_PORT', os.environ.get('PORT', '5001'))) if _IS_APIFY else int(os.environ.get('PORT', '5001'))
+PORT = int(os.environ.get('ACTOR_STANDBY_PORT', '5001')) if _IS_APIFY else 5001
 
 # --- Configuration ---
-# All keys MUST be provided via environment variables.
-# The hosted Apify Actor uses read-only anon keys configured in the Actor settings.
 
 REGIONS = {
     'apac': {
-        'url': os.getenv('APAC_SUPABASE_URL', ''),
-        'key': os.getenv('APAC_SUPABASE_KEY', ''),
+        'url': os.getenv(
+            'APAC_SUPABASE_URL',
+            'https://yruhtsqomrlhoqmhligt.supabase.co',
+        ),
+        'key': os.getenv(
+            'APAC_SUPABASE_KEY',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlydWh0c3FvbXJsaG9xbWhsaWd0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTg0MTk3OCwiZXhwIjoyMDg3NDE3OTc4fQ.HUWZb9-p8CH8yFH_EqOzxowMa8go3-O4yW4KUrthtag',
+        ),
         'countries': ['AU', 'NZ', 'SG'],
     },
     'us': {
-        'url': os.getenv('US_SUPABASE_URL', ''),
-        'key': os.getenv('US_SUPABASE_KEY', ''),
+        'url': os.getenv(
+            'US_SUPABASE_URL',
+            'https://oclajxwxyxorlfhahoqj.supabase.co',
+        ),
+        'key': os.getenv(
+            'US_SUPABASE_KEY',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9jbGFqeHd4eXhvcmxmaGFob3FqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTg0NjgxNCwiZXhwIjoyMDg3NDIyODE0fQ.dQkzSIwe5AH18WB9NCEI10suSGb9l8Vn0epx4BZ840E',
+        ),
         'countries': ['US'],
     },
     'eu': {
-        'url': os.getenv('EU_SUPABASE_URL', ''),
-        'key': os.getenv('EU_SUPABASE_KEY', ''),
+        'url': os.getenv(
+            'EU_SUPABASE_URL',
+            'https://wyieuikljzxrlqzaawtv.supabase.co',
+        ),
+        'key': os.getenv(
+            'EU_SUPABASE_KEY',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind5aWV1aWtsanp4cmxxemFhd3R2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTg0NzQyNCwiZXhwIjoyMDg3NDIzNDI0fQ.Kho42cReP7oYMggrv35aJRyfjmAjtZgfb59pfmor07w',
+        ),
         'countries': ['UK', 'CA', 'IE', 'FR'],
     },
 }
@@ -55,18 +71,19 @@ DIRECTORIES = {
     'sg-companies': {'name': 'Singapore Companies', 'country': 'SG', 'region': 'apac'},
     'us-healthcare': {'name': 'US Healthcare Providers', 'country': 'US', 'region': 'us'},
     'us-nonprofits': {'name': 'US Nonprofits', 'country': 'US', 'region': 'us'},
-    'us-transport': {'name': 'US Transport', 'country': 'US', 'region': 'us'},
-    'us-education': {'name': 'US Education', 'country': 'US', 'region': 'us'},
+    'us-carriers': {'name': 'US Transport Carriers', 'country': 'US', 'region': 'us'},
+    'us-schools': {'name': 'US Schools', 'country': 'US', 'region': 'us'},
     'uk-companies': {'name': 'UK Companies', 'country': 'UK', 'region': 'eu'},
-    'ca-businesses': {'name': 'Canadian Businesses', 'country': 'CA', 'region': 'eu'},
-    'ie-charities': {'name': 'Irish Charities', 'country': 'IE', 'region': 'eu'},
-    'fr-entreprises': {'name': 'French Enterprises', 'country': 'FR', 'region': 'eu'},
+    'uk-establishments': {'name': 'UK Establishments', 'country': 'UK', 'region': 'eu'},
+    'ca-corporations': {'name': 'Canadian Corporations', 'country': 'CA', 'region': 'eu'},
+    'ie-companies': {'name': 'Irish Companies', 'country': 'IE', 'region': 'eu'},
+    'fr-companies': {'name': 'French Companies', 'country': 'FR', 'region': 'eu'},
 }
 
 PUBLIC_FIELDS = (
     'id,name,slug,description,phone,website,'
     'street_address,suburb,state,postcode,country,'
-    'google_rating,google_review_count,is_active,quality_score'
+    'google_rating,google_review_count,is_active,quality_score,profile_completeness'
 )
 
 
@@ -80,7 +97,7 @@ async def _query_supabase(
 ) -> tuple[list[dict[str, Any]], int]:
     """Query a regional Supabase instance."""
     cfg = REGIONS.get(region)
-    if not cfg or not cfg['url'] or not cfg['key']:
+    if not cfg:
         return [], 0
 
     url = f'{cfg["url"]}/rest/v1/providers'
@@ -478,10 +495,53 @@ async def verify_business(
 
 
 @mcp.tool()
+async def chat_search(
+    question: str,
+    limit: int = 10,
+) -> dict[str, Any]:
+    """Ask a natural language question about businesses.
+
+    Uses AI to parse your question into structured filters and search
+    12M+ verified business records. Returns matching businesses with
+    a natural language summary.
+
+    Examples:
+    - "Find plumbers in Sydney with good reviews"
+    - "NDIS providers near Melbourne that have a website"
+    - "Healthcare facilities in New York"
+    - "Top-rated childcare centres in Brisbane"
+    - "Companies in London with phone numbers"
+
+    Args:
+        question: Natural language search query.
+        limit: Maximum results to return (1-50, default 10).
+    """
+    api_url = os.getenv('DATA_API_URL', 'http://localhost:9472')
+
+    try:
+        async with httpx.AsyncClient(timeout=60) as client:
+            resp = await client.get(
+                f'{api_url}/v1/chat',
+                params={'q': question, 'limit': min(limit, 50)},
+            )
+            if resp.status_code != 200:
+                return {
+                    'error': f'Chat search failed: {resp.status_code}',
+                    'hint': 'Try search_businesses for direct filtering',
+                }
+            return resp.json()
+    except Exception as e:
+        return {
+            'error': f'Chat search unavailable: {e}',
+            'hint': 'Use search_businesses with explicit filters instead',
+        }
+
+
+@mcp.tool()
 async def list_directories() -> dict[str, Any]:
     """List all available directories and their record counts.
 
-    Returns the 19 directories across 10 countries with metadata about
+    Returns the 20 directories across 10 countries with metadata about
     each data source.
     """
     return {

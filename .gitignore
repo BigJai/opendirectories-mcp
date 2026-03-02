@@ -12,3 +12,4 @@ venv/
 *.db
 .apify/
 temp_file.zip
+.mcpregistry_*
