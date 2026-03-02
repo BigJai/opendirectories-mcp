@@ -1,0 +1,12 @@
+runtime: container
+
+build:
+  dockerfile: Dockerfile
+
+start:
+  command:
+    - python
+    - -m
+    - opendirectories_mcp
+  env:
+    PORT: "{{port}}"

@@ -1,0 +1,50 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opendirectories-mcp"
+version = "0.1.0"
+description = "MCP server for searching 12M+ verified businesses across 10 countries. Government-sourced, Google Maps enriched."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [
+  { name = "Jai Dunlop", email = "jaidunlop85@gmail.com" },
+]
+keywords = [
+  "mcp",
+  "mcp-server",
+  "business-data",
+  "lead-generation",
+  "business-directory",
+  "market-research",
+  "competitive-analysis",
+  "business-verification",
+]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Software Development :: Libraries",
+]
+dependencies = [
+  "mcp[cli]>=1.6.0",
+  "httpx>=0.27.0",
+]
+
+[project.scripts]
+opendirectories-mcp = "opendirectories_mcp.__main__:main"
+
+[project.urls]
+Homepage = "https://opendirectories.ai"
+Repository = "https://github.com/BigJai/opendirectories-mcp"
+Issues = "https://github.com/BigJai/opendirectories-mcp/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opendirectories_mcp"]
