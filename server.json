@@ -1,16 +1,70 @@
 {
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.BigJai/opendirectories-business-data",
-  "description": "Search 12M+ verified businesses across 10 countries. Government-sourced (ASIC, NDIS, CMS, Companies House), enriched with Google Maps ratings. 6 tools for search, verification, competitor analysis, and market research.",
+  "description": "Search 12M+ verified businesses across 10 countries via government registers.",
+  "repository": {
+    "url": "https://github.com/BigJai/opendirectories-mcp",
+    "source": "github"
+  },
+  "version": "0.1.0",
+  "packages": [
+    {
+      "registryType": "pypi",
+      "identifier": "opendirectories-mcp",
+      "version": "0.1.0",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "description": "APAC Supabase URL",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "name": "APAC_SUPABASE_URL"
+        },
+        {
+          "description": "APAC Supabase anon key",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true,
+          "name": "APAC_SUPABASE_KEY"
+        },
+        {
+          "description": "US Supabase URL",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "name": "US_SUPABASE_URL"
+        },
+        {
+          "description": "US Supabase anon key",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true,
+          "name": "US_SUPABASE_KEY"
+        },
+        {
+          "description": "EU Supabase URL",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": false,
+          "name": "EU_SUPABASE_URL"
+        },
+        {
+          "description": "EU Supabase anon key",
+          "isRequired": false,
+          "format": "string",
+          "isSecret": true,
+          "name": "EU_SUPABASE_KEY"
+        }
+      ]
+    }
+  ],
   "remotes": [
     {
       "type": "streamable-http",
       "url": "https://secure-wave--opendirectories-business-data.apify.actor/mcp"
-    }
-  ],
-  "packages": [
-    {
-      "registryType": "pypi",
-      "identifier": "opendirectories-mcp"
     }
   ]
 }
